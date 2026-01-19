@@ -1,11 +1,11 @@
+import glob
+
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_core.messages.chat import ChatMessage
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import load_prompt
-import glob
-from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 
 # API key 로드
 load_dotenv()
@@ -24,7 +24,6 @@ if "messages" not in st.session_state:
 with st.sidebar:
     # 초기화 버튼 생성
     clear_btn = st.button("대화 초기화")
-
     prompt_files = glob.glob("prompts/*.yaml")
     selected_prompt = st.selectbox("프롬포트를 선택해 주세요", prompt_files, index=0)
     task_input = st.text_input("TASK 입력", "")

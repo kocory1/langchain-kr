@@ -1,18 +1,13 @@
 import os
 
 import streamlit as st
+from chain import create_chain
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_community.vectorstores import FAISS
 from langchain_core.messages.chat import ChatMessage
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import load_prompt
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_teddynote import logging
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from retriever import create_retriever
 
-# 프로젝트 이름을 입력합니다.
+# 프로젝트 이름을 입력합니다.s
 logging.langsmith("[Project] PDF RAG")
 
 # API key 로드
@@ -28,7 +23,7 @@ if not os.path.exists(".cache/embeddings"):
 if not os.path.exists(".cache/files"):
     os.mkdir(".cache/files")
 
-st.title("PDF 기반 QA")
+st.title("Local Model 기반 RAG")
 
 # 처음 1번만 실행되는 코드
 if "messages" not in st.session_state:
@@ -46,9 +41,7 @@ with st.sidebar:
     # 파일 업로더
     uploaded_file = st.file_uploader("파일 업로드", type=["pdf"])
     # 모델 선택 메뉴
-    selected_model = st.selectbox(
-        "LLM 선택", ["gpt-4o", "gpt-4-turbo", "gpt-4o-mini"], index=0
-    )
+    selected_model = st.selectbox("LLM 선택", ["xionic", "ollama"], index=0)
 
 
 # 이전 대화 출력
@@ -71,46 +64,7 @@ def embed_file(file):
     with open(file_path, "wb") as f:
         f.write(file_content)
 
-        # 단계 1: 문서 로드(Load Documents)
-    loader = PyMuPDFLoader(file_path)
-    docs = loader.load()
-
-    # 단계 2: 문서 분할(Split Documents)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
-    split_documents = text_splitter.split_documents(docs)
-
-    # 단계 3: 임베딩(Embedding) 생성
-    embeddings = OpenAIEmbeddings()
-
-    # 단계 4: DB 생성(Create DB) 및 저장
-    # 벡터스토어를 생성합니다.
-    vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
-
-    # 단계 5: 검색기(Retriever) 생성
-    # 문서에 포함되어 있는 정보를 검색하고 생성합니다.
-    retriever = vectorstore.as_retriever()
-    return retriever
-
-
-# 체인 생성
-def create_chain(retriever, model_name="gpt-5-nano"):
-    # 프롬포트 적용
-    # 단계 6: 프롬프트 생성(Create Prompt)
-    # 프롬프트를 생성합니다.
-    prompt = load_prompt("prompts/pdf-rag.yaml", encoding="utf-8")
-
-    # 단계 7: 언어모델(LLM) 생성
-    # 모델(LLM) 을 생성합니다.
-    llm = ChatOpenAI(model=model_name, temperature=0)
-
-    # 단계 8: 체인(Chain) 생성
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-    return chain
+    return create_retriever(file_path=file_path)
 
 
 # 파일이 업로드 되었을 때
