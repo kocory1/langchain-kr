@@ -6,6 +6,10 @@ from langchain_core.messages.chat import ChatMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import load_prompt
 from langchain_openai import ChatOpenAI
+from langchain_teddynote import logging
+
+# 프로젝트 이름을 입력합니다.
+logging.langsmith("[Project] PDF RAG")
 
 # API key 로드
 load_dotenv()

@@ -1,12 +1,11 @@
+import os
+
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_core.messages.chat import ChatMessage
 from langchain_openai import ChatOpenAI
 from langchain_teddynote import logging
 from langchain_teddynote.models import MultiModal
-
-from dotenv import load_dotenv
-import os
-
 
 # API KEY 정보로드
 load_dotenv()
@@ -86,7 +85,7 @@ def generate_answer(
     # 객체 생성
     llm = ChatOpenAI(
         temperature=0,
-        model_name=model_name,  # 모델명
+        model=model_name,  # 모델명
     )
 
     # 멀티모달 객체 생성
